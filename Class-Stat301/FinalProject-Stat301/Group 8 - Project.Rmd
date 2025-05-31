@@ -1,0 +1,126 @@
+---
+title: "Group 8: Project"
+author: "Nicholas Dillner, Kyle Smith"
+date: "2025-04-11"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Data:  age   sex   bmi   children   smoker   region   charges
+
+#Libraries
+library(tidyverse)
+library(nlme)
+library(multcomp)
+library(ggplot2)
+library(plotly)
+library(GGally)
+library(factoextra)
+library(tsne)
+library(ggfortify)
+library(MASS)
+```
+
+
+```{r, Two-Way Anova}
+insurance_data <- insurance
+
+filter_data_test <- insurance_data %>% filter(if_any(everything(), ~ is.na(.)))
+print(filter_data_test) #Returns 0 rows. There is nothing that is NA.
+
+model <- aov(charges~region+smoker+region*smoker, data=insurance_data)
+summary(model)
+
+insuranceSmoker<-insurance_data%>%filter(smoker == "yes")
+modelSmoker<-aov(charges~region, data=insuranceSmoker)
+summary(modelSmoker)
+TukeyHSD(modelSmoker)
+
+insuranceNonSmoker<-insurance_data%>%filter(smoker == "no")
+modelNonSmoker<-aov(charges~region, data=insuranceNonSmoker)
+summary(modelNonSmoker)
+
+ggplot(insuranceSmoker, aes(x = region, y = charges)) + geom_bar(position="stack", stat="identity") + 
+    labs(title = "Charges by Region for Smokers", x = "Region", y = "Charges")
+ggplot(insuranceNonSmoker, aes(x = region, y = charges)) + geom_bar(position="stack", stat="identity") + 
+    labs(title = "Charges by Region for Non-Smokers", x = "Region", y = "Charges")
+
+
+### H0: μ_NorthWest = μ_NorthEast = μ_SouthWest = μ_SouthEast
+### Ha: At least two means are significantly different
+
+### f = 7.896
+### p-value = 3.19e-05
+
+### Reject H0
+### There is a significant mean score difference between the four regions
+
+
+### H0: μ_Smoker = μ_nonSmoker
+### Ha: μ_Smoker != μ_nonSmoker
+
+### f = 2191.337
+### p-value < 2e-16
+### Reject H0
+### There is a significant mean score difference between smokers and non-smokers
+
+
+### F = 8.598
+### p-value = 1.18e-05
+### Reject H0
+### There is a significant interaction between Region and Smokers
+
+
+### f = 3.316
+### p-value = 0.0205
+### Reject H0
+### There is a significant difference between the mean scores of the four regions for individuals that smoke.
+### southeast-northeast, p-value = 0.0264693
+
+
+### f = 2.155
+### p-value = 0.0917
+### Fail to Reject H0
+### There is Not a significant difference between the mean scores of the four regions for individuals that do not smoke.
+```
+
+```{r}
+#Testing between all regions regardless of smoking/nonsmoking status
+anova_region <- aov(charges ~ region, data = insurance_data)
+summary(anova_region)
+
+region_charges <- insurance_data %>%
+  group_by(region) %>%
+  summarise(mean_charge = mean(charges, na.rm = TRUE),
+  sd_charge = sd(charges, na.rm = TRUE),
+  n = n())
+
+print(region_charges)
+#SouthEast is significantly different between ALL groups.
+
+ggplot(insurance_data, aes(x = region, y = charges)) + geom_bar(position="stack", stat="identity") + 
+    labs(title = "Charges by Region", x = "Region", y = "Charges")
+```
+
+```{r}
+insuranceNonSmoker<-insurance_data%>%filter(smoker == "no")
+modelNonSmoker<-aov(charges~region, data=insuranceNonSmoker)
+summary(modelNonSmoker)
+TukeyHSD(modelNonSmoker)
+```
+
+```{r}
+#Test for question 2
+t_test_result <- t.test(charges ~ smoker, data = insurance_data)
+print(t_test_result)
+
+ggplot(insurance_data, aes(x = smoker, y = charges, fill = smoker)) +
+  geom_boxplot() +
+  labs(title = "Insurance Charges: Smokers vs Non-Smokers",
+       x = "Smoker Status", y = "Charges") +
+  theme_minimal()
+
+```
+
