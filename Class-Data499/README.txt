@@ -7,4 +7,7 @@ Tools used:
 Python
 SQL
 Google Slides
-Github
+GitHub
+
+NOTE:
+The presentation is altered. Information regarding the other group members I worked with was removed as was some data that may have been identifying with the company we worked with.
